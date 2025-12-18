@@ -7,6 +7,7 @@ import com.baskaran.task.model.TaskStatus;
 import com.baskaran.task.repo.TaskListRepo;
 import com.baskaran.task.repo.TaskRepo;
 import com.baskaran.task.service.TaskService;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -30,6 +31,8 @@ public class TaskServiceImpl implements TaskService {
         return taskRepo.findByTaskListId(taskListId);
 
     }
+
+
 
     @Override
     public Task creatTask(UUID taskListId, Task task) {
@@ -63,8 +66,32 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public Optional<Task> getTask(UUID taskListId, UUID taskId) {
+        return taskRepo.findByIdAndTaskList_Id(taskId, taskListId);
+    }
 
 
-        return taskRepo.findByIdAndTaskList_Id(taskListId,taskId);
+    @Override
+    public Task updateTask(UUID taskListId, UUID taskId, Task task) {
+
+        Task existingTask = taskRepo.findByIdAndTaskList_Id(taskId, taskListId)
+                .orElseThrow(() -> new IllegalArgumentException("Task not found"));
+
+        existingTask.setTitle(task.getTitle());
+        existingTask.setDescription(task.getDescription());
+        existingTask.setPriority(task.getPriority());
+        existingTask.setStatus(task.getStatus());
+        existingTask.setDueDate(task.getDueDate());
+        existingTask.setUpdateAt(LocalDateTime.now());
+
+        return taskRepo.save(existingTask);
+    }
+
+    @Transactional
+    @Override
+    public void deleteTask(UUID taskListId, UUID taskId) {
+
+        taskRepo.deleteByIdAndTaskList_Id(taskId,taskListId);
+
+
     }
 }
